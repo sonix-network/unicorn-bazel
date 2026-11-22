@@ -1,0 +1,23 @@
+matrix:
+  bazel: [8.x, 9.x]
+tasks:
+  linux:
+    name: Build Unicorn and run the upstream ARM, AArch64 and x86 unit tests
+    platform: ubuntu2404
+    bazel: ${{ bazel }}
+    build_targets:
+    - '@unicorn//:unicorn'
+    - '@unicorn//:unicorn_arm'
+    - '@unicorn//:unicorn_arm64'
+    - '@unicorn//:unicorn_x86'
+    test_targets:
+    - '@unicorn//:test_arm'
+    - '@unicorn//:test_arm64'
+    - '@unicorn//:test_x86'
+    - '@unicorn//:test_mem'
+    - '@unicorn//:test_ctl'
+    - '@unicorn//:test_arm_arm_only'
+    - '@unicorn//:variant_test_unicorn'
+    - '@unicorn//:variant_test_unicorn_arm'
+    - '@unicorn//:variant_test_unicorn_arm64'
+    - '@unicorn//:variant_test_unicorn_x86'
