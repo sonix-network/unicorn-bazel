@@ -12,7 +12,8 @@
         "github:unicorn-engine/unicorn"
     ],
     "versions": [
-        "2.1.4"
+        "2.1.4",
+        "2.1.4.bcr.1"
     ],
     "yanked_versions": {}
 }

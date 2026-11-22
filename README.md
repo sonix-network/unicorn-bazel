@@ -24,7 +24,7 @@ build in [google/silifuzz](https://github.com/google/silifuzz) (see
 ## Using it
 
 ```starlark
-bazel_dep(name = "unicorn", version = "2.1.4")
+bazel_dep(name = "unicorn", version = "2.1.4.bcr.1")
 ```
 
 with this registry ahead of the BCR:
