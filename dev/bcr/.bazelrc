@@ -1,0 +1,5 @@
+# Like the BCR presubmit: the host's auto-detected C toolchain, no Zig.
+common --lockfile_mode=off
+common --registry=file://%workspace%/../..
+common --registry=https://bcr.bazel.build
+test --test_output=errors

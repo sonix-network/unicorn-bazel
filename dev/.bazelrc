@@ -1,0 +1,13 @@
+# Bazel expands %workspace% relative to this consumer, not the checkout path.
+# The registry is edited in place; never reuse source.json hashes from a lockfile.
+common --lockfile_mode=off
+common --registry=file://%workspace%/..
+common --registry=https://bcr.bazel.build
+
+# Hermetic: the registered Zig toolchain compiles; no host compiler or PATH.
+build --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build --incompatible_strict_action_env
+build --action_env=PATH=/nonexistent
+build --host_action_env=PATH=/nonexistent
+test --test_env=PATH=/usr/bin:/bin
+test --test_output=errors

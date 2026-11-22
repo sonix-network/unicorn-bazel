@@ -1,0 +1,26 @@
+name: Unicorn module
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: [dev, dev/bcr]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Check overlay pins
+        run: python3 dev/tools/pin_sources.py --check
+      - name: Build all variants and run the upstream unit tests
+        working-directory: ${{ matrix.workspace }}
+        run: bazelisk test --test_output=errors @unicorn//:all

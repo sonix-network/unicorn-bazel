@@ -1,0 +1,14 @@
+unicorn-bazel: a Bazel registry module for the Unicorn CPU emulator.
+
+The Bazel overlay in modules/unicorn/ is derived from
+third_party/BUILD.unicorn in google/silifuzz
+(https://github.com/google/silifuzz), Copyright Google LLC, licensed under
+the Apache License, Version 2.0. It was updated for Unicorn 2.1.4, extended
+with the 32-bit ARM front end, and restructured into Starlark macros.
+
+Unicorn itself (https://github.com/unicorn-engine/unicorn) is licensed under
+the GNU General Public License, version 2, and is not part of this
+repository: Bazel downloads the upstream release archive, verifies its
+SHA-256 and applies the overlay. The files under
+modules/unicorn/2.1.4/overlay/bazel/config/ are the output of Unicorn's own
+qemu/configure and qemu/scripts/create_config.
