@@ -1,3 +1,3 @@
 module(name = "unicorn_bcr_presubmit")
 
-bazel_dep(name = "unicorn", version = "2.1.4.bcr.1")
+bazel_dep(name = "unicorn", version = "2.1.4.bcr.2")
