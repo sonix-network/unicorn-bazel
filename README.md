@@ -50,11 +50,11 @@ Notes for consumers:
 
 - Build with `-c opt` for a usable emulator. Like upstream's default CMake
   build, the overlay sets no optimization level of its own.
-- `cc_test` links dynamically by default. Bazel's per-library shared objects
-  do not record their dependencies on each other, so a test that calls only
-  the public API would not load the guest front ends. Set
-  `linkstatic = True` on such tests; `cc_binary` and Rust link statically
-  already.
+- The libraries are static-only (`linkstatic = True`), like upstream's single
+  `libunicorn`, so `cc_test`, `cc_binary` and Rust consumers all link the
+  front ends into one image. Version 2.1.4 was not static-only: a
+  dynamically linked `cc_test` or `rust_test` failed to load or link the
+  front ends there. Use 2.1.4.bcr.1 or later.
 
 ## How the overlay relates to upstream
 
@@ -68,8 +68,9 @@ Notes for consumers:
 - Every QEMU include directory is a private `-I`. Only
   `include/unicorn/*.h` is exported, so QEMU's internal headers (several
   targets ship a `cpu.h`) never reach consumers.
-- Unlike upstream, `unicorn-common` is not built with hidden visibility,
-  because Bazel may link each library as its own shared object.
+- `unicorn-common` is built with hidden visibility, as upstream's
+  `C_VISIBILITY_PRESET` does; that is safe because the libraries are
+  static-only (2.1.4 omitted it).
 
 ## Build and test
 
