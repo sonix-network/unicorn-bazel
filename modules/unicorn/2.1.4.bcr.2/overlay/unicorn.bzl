@@ -1,7 +1,8 @@
 """Bazel build of Unicorn 2.1.4, derived from google/silifuzz third_party/BUILD.unicorn.
 
 Sources, defines and include order follow Unicorn's CMakeLists.txt: its
-GCC/Clang branch on Linux and its MSVC branch on Windows. Every include
+GCC/Clang branch on Linux and macOS (x86-64 and AArch64 hosts) and its MSVC
+branch on Windows (x86-64). Every include
 directory is passed as a private `-I` so that QEMU's internal headers (several
 targets ship a `cpu.h`) never reach consumers; only `include/unicorn/*.h` is
 exported.
@@ -12,8 +13,39 @@ load("@rules_cc//cc:cc_library.bzl", "cc_library")
 # "" in this repository's own workspace, "external/<canonical name>" otherwise.
 _ROOT = Label("//:BUILD.bazel").workspace_root
 
-_LINUX = "@platforms//os:linux"
-_WINDOWS = "@platforms//os:windows"
+# Hosts this overlay has configuration for: (OS, CPU, config directory).
+# POSIX hosts use the overlay's configure output under bazel/config/; Windows
+# (MSVC) uses Unicorn's own msvc/ tree, which CMakeLists.txt puts first on the
+# include path.
+_HOSTS = {
+    "linux_x86_64": ("linux", "x86_64", "bazel/config/linux-x86_64"),
+    "linux_aarch64": ("linux", "aarch64", "bazel/config/linux-aarch64"),
+    "macos_x86_64": ("macos", "x86_64", "bazel/config/macos-x86_64"),
+    "macos_aarch64": ("macos", "aarch64", "bazel/config/macos-aarch64"),
+    "windows_x86_64": ("windows", "x86_64", "msvc"),
+}
+
+def _host(name):
+    return Label("//:host_" + name)
+
+def unicorn_hosts():
+    """Declares one config_setting per supported host; call from BUILD.bazel."""
+    for name, (os, cpu, _) in _HOSTS.items():
+        native.config_setting(
+            name = "host_" + name,
+            constraint_values = ["@platforms//os:" + os, "@platforms//cpu:" + cpu],
+            visibility = ["//visibility:private"],
+        )
+
+def _per_host(values):
+    """select() over the supported hosts; values maps host name to a list."""
+    return select({_host(name): value for name, value in values.items()})
+
+def _per_os(posix, windows):
+    return _per_host({
+        name: windows if os == "windows" else posix
+        for name, (os, _, _) in _HOSTS.items()
+    })
 
 def _path(relative):
     return _ROOT + "/" + relative if _ROOT else relative
@@ -22,38 +54,39 @@ def _includes(directories):
     # cl.exe accepts -I as well as /I.
     return ["-I" + _path(directory) for directory in directories]
 
-def _per_os(linux, windows):
-    return select({_LINUX: linux, _WINDOWS: windows})
-
-# Where config-host.h and <target>-softmmu/config-target.h come from: the
-# overlay's configure output on Linux, Unicorn's own msvc/ tree on Windows
-# (CMakeLists.txt puts msvc/ first on the include path for MSVC).
+# Where config-host.h and <target>-softmmu/config-target.h come from.
 def _config_dirs(softmmu = None):
     suffix = "/%s-softmmu" % softmmu if softmmu else ""
-    return _per_os(
-        _includes(["bazel/config" + suffix]),
-        _includes(["msvc" + suffix]),
-    )
+    return _per_host({
+        name: _includes([directory + suffix])
+        for name, (_, _, directory) in _HOSTS.items()
+    })
 
-# CMakeLists.txt include_directories(), then the host TCG backend that
-# add_compile_options() adds on both branches.
+# CMakeLists.txt include_directories().
 _COMMON_INCLUDES = [
     "glib_compat",
     "qemu",
     "qemu/include",
     "include",
     "qemu/tcg",
-    "qemu/tcg/i386",
 ]
+
+# The host TCG backend (UNICORN_TARGET_ARCH), added by add_compile_options().
+_TCG_BACKEND = _per_host({
+    name: _includes(["qemu/tcg/" + ("i386" if cpu == "x86_64" else cpu)])
+    for name, (_, cpu, _) in _HOSTS.items()
+})
 
 # add_compile_options() for each branch, plus UNICORN_CFLAGS for an x86-64
 # GCC/Clang host. Warnings are silenced: QEMU 5 sources predate many current
 # compiler defaults, and this keeps consumers' output readable without
 # changing code generation.
-_OS_COPTS = _per_os(
+_OS_COPTS = _per_host({
+    # UNICORN_CFLAGS for an x86-64 GCC/Clang host.
+    name: ["-m64", "-mcx16"] if os != "windows" and cpu == "x86_64" else []
+    for name, (os, cpu, _) in _HOSTS.items()
+}) + _per_os(
     [
-        "-m64",
-        "-mcx16",
         "-D_GNU_SOURCE",
         "-D_FILE_OFFSET_BITS=64",
         "-D_LARGEFILE_SOURCE",
@@ -71,21 +104,22 @@ _OS_COPTS = _per_os(
 )
 
 def _copts(softmmu = None):
-    return _OS_COPTS + _config_dirs() + _includes(_COMMON_INCLUDES) + (
+    return _OS_COPTS + _config_dirs() + _includes(_COMMON_INCLUDES) + _TCG_BACKEND + (
         _config_dirs(softmmu) if softmmu else []
     )
 
-# x86-64 Linux (GCC/Clang) and x86-64 Windows (MSVC) are the hosts this overlay
-# has configuration for.
-HOST_COMPATIBILITY = select({
-    _LINUX: [],
-    _WINDOWS: [],
-    "//conditions:default": ["@platforms//:incompatible"],
-}) + ["@platforms//cpu:x86_64"]
+# Every other host is incompatible.
+_COMPATIBILITY = {_host(name): [] for name in _HOSTS}
+_COMPATIBILITY["//conditions:default"] = ["@platforms//:incompatible"]
+HOST_COMPATIBILITY = select(_COMPATIBILITY)
 
 def test_copts(defines):
     """Copts for the upstream unit tests, which include config-host.h."""
     return _per_os(["-w"], ["/w"]) + defines + _config_dirs()
+
+def config_headers():
+    """Every host's config-host.h / config-target.h, for code that includes them."""
+    return native.glob(["bazel/config/**/*.h", "msvc/**/*.h"])
 
 def internal_headers():
     """Every header QEMU sources may include."""

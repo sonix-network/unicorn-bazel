@@ -8,14 +8,17 @@
 #   :unicorn_arm64  AArch64 guests only
 #   :unicorn_x86    x86 guests only
 # Consumers include <unicorn/unicorn.h>.
-# Hosts: x86-64 Linux (GCC/Clang) and x86-64 Windows (MSVC).
+# Hosts: Linux and macOS on x86-64 and AArch64 (GCC/Clang), Windows on x86-64
+# (MSVC).
 
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load(
     "//:unicorn.bzl",
     "HOST_COMPATIBILITY",
+    "config_headers",
     "test_copts",
     "unicorn_common",
+    "unicorn_hosts",
     "unicorn_library",
     "unicorn_softmmu",
 )
@@ -25,6 +28,8 @@ package(default_visibility = ["//visibility:private"])
 licenses(["restricted"])
 
 exports_files(["COPYING"])
+
+unicorn_hosts()
 
 unicorn_common(name = "unicorn_common")
 
@@ -162,8 +167,7 @@ _ALL_ARCH_DEFINES = [
             "tests/unit/%s.c" % test,
             "tests/unit/acutest.h",
             "tests/unit/unicorn_test.h",
-            "bazel/config/config-host.h",
-        ],
+        ] + config_headers(),
         copts = test_copts(defines),
         target_compatible_with = HOST_COMPATIBILITY,
         visibility = ["//visibility:public"],

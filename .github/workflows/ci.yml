@@ -16,6 +16,9 @@ jobs:
         include:
           - {host: ubuntu-24.04, workspace: dev}
           - {host: ubuntu-24.04, workspace: dev/bcr}
+          - {host: ubuntu-24.04-arm, workspace: dev/bcr}
+          - {host: macos-15, workspace: dev/bcr}
+          - {host: macos-15-intel, workspace: dev/bcr}
           # The runner's Visual Studio supplies MSVC, as on the BCR's Windows workers.
           - {host: windows-2025, workspace: dev/bcr}
     runs-on: ${{ matrix.host }}
@@ -25,7 +28,7 @@ jobs:
           persist-credentials: false
       - name: Check overlay pins
         run: python3 dev/tools/pin_sources.py --check
-        if: runner.os == 'Linux'
+        if: runner.os != 'Windows'
       - name: Build all variants and run the upstream unit tests
         working-directory: ${{ matrix.workspace }}
         run: bazelisk test --test_output=errors @unicorn//:all
