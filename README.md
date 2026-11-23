@@ -4,7 +4,7 @@ A standalone Bazel index registry, in the Bazel Central Registry (BCR) layout,
 for the [Unicorn](https://github.com/unicorn-engine/unicorn) CPU emulator.
 Bazel downloads the upstream Unicorn 2.1.4 release archive, verifies its
 SHA-256 and applies the checked-in overlay pinned in
-[`source.json`](modules/unicorn/2.1.4/source.json). No CMake, Ninja or
+[`source.json`](modules/unicorn/2.1.4.bcr.2/source.json). No CMake, Ninja or
 `configure` run at build time.
 
 **This downstream overlay is AI-generated. It is not part of upstream Unicorn

@@ -34,6 +34,9 @@ jobs:
       - name: Check overlay pins
         run: python3 dev/tools/pin_sources.py --check
         if: runner.os != 'Windows'
+      - name: Check overlay pins (Windows)
+        run: python dev/tools/pin_sources.py --check
+        if: runner.os == 'Windows'
       - name: Build all variants and run the upstream unit tests
         working-directory: ${{ matrix.workspace }}
         env:

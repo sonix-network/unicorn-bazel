@@ -21,6 +21,6 @@
         "bazel/config/macos-x86_64/config-host.h": "sha256-vWQR93ZtP9i5vViq8rpltWU/NtDg1+YweJusTa3SAeU=",
         "bazel/config/macos-x86_64/x86_64-softmmu/config-target.h": "sha256-Gr0qVd7Dwc44Np1WdCxdSgJzzB4h57KSvVj+EXB6/Wc=",
         "bazel/variant_test.c": "sha256-x8qG7cz4GVCGX/li2k2Nqhn7w/1+VDP5UvLkSEd235E=",
-        "unicorn.bzl": "sha256-P/4tjgi/VE8WY0/J2i2Vb6Q98ZuZlqI7sQ9KdDYLIi8="
+        "unicorn.bzl": "sha256-/idgrzzXbpz3j44J+qw9vAtUEc6H0yAxGtnxFhk3VuM="
     }
 }

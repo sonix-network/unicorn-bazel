@@ -2,8 +2,12 @@
 # Apple Clang on macOS, MSVC on Windows), no Zig.
 common --enable_platform_specific_config
 common --lockfile_mode=off
+# Platform-specific config is applied after the unconditional options, so
+# each platform lists this checkout first and then the BCR.
 common:linux --registry=file://%workspace%/../..
+common:linux --registry=https://bcr.bazel.build
 common:macos --registry=file://%workspace%/../..
+common:macos --registry=https://bcr.bazel.build
 common:windows --registry=file:///%workspace%/../..
-common --registry=https://bcr.bazel.build
+common:windows --registry=https://bcr.bazel.build
 test --test_output=errors

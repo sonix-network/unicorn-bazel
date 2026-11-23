@@ -34,6 +34,11 @@ def unicorn_hosts():
         native.config_setting(
             name = "host_" + name,
             constraint_values = ["@platforms//os:" + os, "@platforms//cpu:" + cpu],
+            # Windows means Unicorn's MSVC build: a MinGW, clang-cl or other
+            # Windows toolchain matches no host and is incompatible.
+            flag_values = {
+                "@rules_cc//cc/compiler:compiler": "msvc-cl",
+            } if os == "windows" else {},
             visibility = ["//visibility:private"],
         )
 
@@ -220,7 +225,9 @@ def unicorn_common(name):
         # MSVC). These libraries are static-only, so every consumer links them
         # into one image.
         copts = _copts() + _per_os(["-fvisibility=hidden"], []),
-        linkopts = _per_os(["-lpthread"], []),
+        # CMakeLists.txt links pthread and, for unicorn and x86_64-softmmu
+        # (fpu_helper.c's pow, log, tan, ...), libm on non-MSVC hosts.
+        linkopts = _per_os(["-lpthread", "-lm"], []),
         # Static only, as upstream links one libunicorn: no per-library .so.
         linkstatic = True,
         target_compatible_with = HOST_COMPATIBILITY,
