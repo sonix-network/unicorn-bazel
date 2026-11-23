@@ -4,7 +4,7 @@ A standalone Bazel index registry, in the Bazel Central Registry (BCR) layout,
 for the [Unicorn](https://github.com/unicorn-engine/unicorn) CPU emulator.
 Bazel downloads the upstream Unicorn 2.1.4 release archive, verifies its
 SHA-256 and applies the checked-in overlay pinned in
-[`source.json`](modules/unicorn/2.1.4.bcr.2/source.json). No CMake, Ninja or
+[`source.json`](modules/unicorn/2.1.4.bcr.3/source.json). No CMake, Ninja or
 `configure` run at build time.
 
 **This downstream overlay is AI-generated. It is not part of upstream Unicorn
@@ -14,7 +14,7 @@ build in [google/silifuzz](https://github.com/google/silifuzz) (see
 
 ## Scope
 
-- **Hosts** (2.1.4.bcr.2), each built and tested in CI with Bazel 8 and 9:
+- **Hosts** (2.1.4.bcr.2 and later), each built and tested in CI with Bazel 8 and 9:
 
   | Host | Compiler in CI |
   | --- | --- |
@@ -34,7 +34,7 @@ build in [google/silifuzz](https://github.com/google/silifuzz) (see
 ## Using it
 
 ```starlark
-bazel_dep(name = "unicorn", version = "2.1.4.bcr.2")
+bazel_dep(name = "unicorn", version = "2.1.4.bcr.3")
 ```
 
 with this registry ahead of the BCR:
