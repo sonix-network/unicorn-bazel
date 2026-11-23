@@ -14,13 +14,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {host: ubuntu-24.04, workspace: dev}
-          - {host: ubuntu-24.04, workspace: dev/bcr}
-          - {host: ubuntu-24.04-arm, workspace: dev/bcr}
-          - {host: macos-15, workspace: dev/bcr}
-          - {host: macos-15-intel, workspace: dev/bcr}
+          - {host: ubuntu-24.04, workspace: dev, bazel: 9.3.2}
+          - {host: ubuntu-24.04, workspace: dev/bcr, bazel: 9.3.2}
+          - {host: ubuntu-24.04, workspace: dev/bcr, bazel: 8.x}
+          - {host: ubuntu-24.04-arm, workspace: dev/bcr, bazel: 9.3.2}
+          - {host: ubuntu-24.04-arm, workspace: dev/bcr, bazel: 8.x}
+          - {host: macos-15, workspace: dev/bcr, bazel: 9.3.2}
+          - {host: macos-15, workspace: dev/bcr, bazel: 8.x}
+          - {host: macos-15-intel, workspace: dev/bcr, bazel: 9.3.2}
+          - {host: macos-15-intel, workspace: dev/bcr, bazel: 8.x}
           # The runner's Visual Studio supplies MSVC, as on the BCR's Windows workers.
-          - {host: windows-2025, workspace: dev/bcr}
+          - {host: windows-2025, workspace: dev/bcr, bazel: 9.3.2}
+          - {host: windows-2025, workspace: dev/bcr, bazel: 8.x}
     runs-on: ${{ matrix.host }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -31,4 +36,6 @@ jobs:
         if: runner.os != 'Windows'
       - name: Build all variants and run the upstream unit tests
         working-directory: ${{ matrix.workspace }}
+        env:
+          USE_BAZEL_VERSION: ${{ matrix.bazel }}
         run: bazelisk test --test_output=errors @unicorn//:all
