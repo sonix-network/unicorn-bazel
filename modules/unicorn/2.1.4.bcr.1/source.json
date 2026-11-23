@@ -3,12 +3,12 @@
     "integrity": "sha256-6ohj8JWgE2OIaU5aYGOv2bt2UOMCQ91iUa9Zxc5WAfQ=",
     "strip_prefix": "unicorn-2.1.4",
     "overlay": {
-        "BUILD.bazel": "sha256-QUru5H5Z0Rh5tcZVOO3gw1a1UP1B/66BIxSL/n44DWw=",
+        "BUILD.bazel": "sha256-SLEf8862TcViZoMWNrMnv938VL30hgA2r5TSWs34RZU=",
         "bazel/config/aarch64-softmmu/config-target.h": "sha256-T4ut/xtykyOgezrt1ie5g8+3LzqpQp4sLpOabxBHpzs=",
         "bazel/config/arm-softmmu/config-target.h": "sha256-OqJR4jKjDh6XQioz90K6AREBNDLq4+gfltDuVclQu0I=",
         "bazel/config/config-host.h": "sha256-1vgrEkd2Kk+IKj0m604kH+u7QBY46qEBLdhl6RKGKWs=",
         "bazel/config/x86_64-softmmu/config-target.h": "sha256-/GoIyZxECzGArpOAYPAfq5iQNN9S8n4tvFfe+zTEV1Y=",
         "bazel/variant_test.c": "sha256-x8qG7cz4GVCGX/li2k2Nqhn7w/1+VDP5UvLkSEd235E=",
-        "unicorn.bzl": "sha256-FbxXQlbjUBZblD7fWeVkwRDMzVqLYZI/DG8mPnOG6Cc="
+        "unicorn.bzl": "sha256-9zfdlYipRdMPGwjlCJDNekCATK/PdUnobJj9PhTXEjM="
     }
 }

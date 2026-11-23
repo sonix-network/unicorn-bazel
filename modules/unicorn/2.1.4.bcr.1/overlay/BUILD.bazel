@@ -164,10 +164,6 @@ _ALL_ARCH_DEFINES = [
             "bazel/config/config-host.h",
         ],
         copts = test_copts(defines),
-        # cc_test links dynamically by default, and Bazel's per-library .so
-        # files carry no DT_NEEDED between them: the test would not load the
-        # front ends that only uc.c references. Link like cc_binary does.
-        linkstatic = True,
         target_compatible_with = HOST_COMPATIBILITY,
         visibility = ["//visibility:public"],
         deps = [library],
@@ -191,7 +187,6 @@ _ALL_ARCH_DEFINES = [
         size = "small",
         srcs = ["bazel/variant_test.c"],
         copts = ["-DEXPECT_%s=1" % arch for arch in archs],
-        linkstatic = True,
         target_compatible_with = HOST_COMPATIBILITY,
         visibility = ["//visibility:public"],
         deps = [":" + library],

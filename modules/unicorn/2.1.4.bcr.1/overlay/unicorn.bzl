@@ -134,11 +134,12 @@ def unicorn_common(name):
         name = name,
         srcs = COMMON_SRCS + internal_headers(),
         textual_hdrs = textual_includes(),
-        # CMake sets C_VISIBILITY_PRESET hidden on unicorn-common because it
-        # links one libunicorn. Bazel may link each cc_library as its own .so
-        # (cc_test's dynamic mode), so these symbols must stay visible.
-        copts = _COPTS,
+        # CMake sets C_VISIBILITY_PRESET hidden on unicorn-common. These
+        # libraries are static-only, so every consumer links them into one image.
+        copts = _COPTS + ["-fvisibility=hidden"],
         linkopts = ["-lpthread"],
+        # Static only, as upstream links one libunicorn: no per-library .so.
+        linkstatic = True,
         target_compatible_with = HOST_COMPATIBILITY,
         visibility = ["//visibility:private"],
     )
@@ -167,6 +168,8 @@ def unicorn_softmmu(name, softmmu, target_dir, srcs, common):
             "qemu/target/" + target_dir,
         ]),
         deps = [common],
+        # Static only, as upstream links one libunicorn: no per-library .so.
+        linkstatic = True,
         target_compatible_with = HOST_COMPATIBILITY,
         visibility = ["//visibility:private"],
     )
@@ -189,6 +192,8 @@ def unicorn_library(name, archs, softmmus, **kwargs):
         strip_include_prefix = "include",
         copts = _COPTS + ["-DUNICORN_HAS_%s" % arch for arch in archs],
         deps = softmmus,
+        # Static only, as upstream links one libunicorn: no per-library .so.
+        linkstatic = True,
         target_compatible_with = HOST_COMPATIBILITY,
         **kwargs
     )
