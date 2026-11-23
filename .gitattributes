@@ -1,0 +1,3 @@
+# Registry integrities are over bytes, regardless of checkout OS.
+/modules/** text=auto eol=lf
+/dev/** text eol=lf

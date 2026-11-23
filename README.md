@@ -4,7 +4,7 @@ A standalone Bazel index registry, in the Bazel Central Registry (BCR) layout,
 for the [Unicorn](https://github.com/unicorn-engine/unicorn) CPU emulator.
 Bazel downloads the upstream Unicorn 2.1.4 release archive, verifies its
 SHA-256 and applies the checked-in overlay pinned in
-[`source.json`](modules/unicorn/2.1.4/source.json). No CMake, Ninja or
+[`source.json`](modules/unicorn/2.1.4.bcr.2/source.json). No CMake, Ninja or
 `configure` run at build time.
 
 **This downstream overlay is AI-generated. It is not part of upstream Unicorn
@@ -14,8 +14,18 @@ build in [google/silifuzz](https://github.com/google/silifuzz) (see
 
 ## Scope
 
-- **Host:** Linux x86-64 only. Other hosts fail with an explicit `#error` in
-  the generated `config-host.h` and are marked incompatible.
+- **Hosts** (2.1.4.bcr.2), each built and tested in CI with Bazel 8 and 9:
+
+  | Host | Compiler in CI |
+  | --- | --- |
+  | Linux x86-64 | GCC; also hermetic Zig/Clang |
+  | Linux AArch64 | GCC |
+  | macOS AArch64 (Apple silicon) | Apple Clang |
+  | macOS x86-64 | Apple Clang |
+  | Windows x86-64 | MSVC (`cl.exe`, `ml64`) |
+
+  Other hosts, including Windows AArch64 and MinGW, are marked incompatible.
+  Versions 2.1.4 and 2.1.4.bcr.1 support Linux x86-64 only.
 - **Guest architectures:** 32-bit ARM, AArch64 and x86 (16/32/64-bit).
   Unicorn's other front ends (MIPS, PPC, RISC-V, SPARC, m68k, s390x,
   TriCore) are not built yet.
@@ -24,7 +34,7 @@ build in [google/silifuzz](https://github.com/google/silifuzz) (see
 ## Using it
 
 ```starlark
-bazel_dep(name = "unicorn", version = "2.1.4.bcr.1")
+bazel_dep(name = "unicorn", version = "2.1.4.bcr.2")
 ```
 
 with this registry ahead of the BCR:
@@ -59,12 +69,23 @@ Notes for consumers:
 ## How the overlay relates to upstream
 
 - Source lists, defines and include order follow Unicorn 2.1.4's
-  `CMakeLists.txt` for a GCC/Clang host (`UNICORN_COMMON_SRCS`,
-  `UNICORN_ARCH_COMMON`, the `*-softmmu` libraries and `UNICORN_SRCS`).
-- `bazel/config/` holds the output of Unicorn's own `qemu/configure` and
-  `qemu/scripts/create_config`, run as `CMakeLists.txt` runs them, with Clang
-  and `-m64 -mcx16` (the unused `CONFIG_IASL` line dropped). The host header
-  matches silifuzz's.
+  `CMakeLists.txt` (`UNICORN_COMMON_SRCS`, `UNICORN_ARCH_COMMON`, the
+  `*-softmmu` libraries and `UNICORN_SRCS`):
+  - its GCC/Clang branch on Linux and macOS;
+  - its MSVC branch on Windows, which adds the Win32 sources and the
+    `setjmp` wrapper assembled by `ml64`.
+- The host TCG backend follows the host CPU (`qemu/tcg/i386` or
+  `qemu/tcg/aarch64`).
+- `bazel/config/<os>-<cpu>/` holds each POSIX host's output of Unicorn's own
+  `qemu/configure` and `qemu/scripts/create_config`, run as `CMakeLists.txt`
+  runs them (the unused `CONFIG_IASL` line dropped). Each header names the
+  compiler it was probed with and fails with `#error` on another host.
+  - Linux x86-64 was probed locally with Clang and matches silifuzz's header.
+  - The others were probed on GitHub's runners.
+  - The manual [probe workflow](.github/workflows/probe-config.yml)
+    regenerates them.
+- On Windows the config headers are Unicorn's own `msvc/` tree, as for its
+  MSVC build.
 - Every QEMU include directory is a private `-I`. Only
   `include/unicorn/*.h` is exported, so QEMU's internal headers (several
   targets ship a `cpu.h`) never reach consumers.
@@ -74,7 +95,8 @@ Notes for consumers:
 
 ## Build and test
 
-On Linux x86-64 with Bazel 9.3.2 (or Bazelisk):
+With Bazel 9.3.2 (or Bazelisk). `dev` needs Linux x86-64; `dev/bcr` runs on
+any supported host:
 
 ```sh
 python3 dev/tools/pin_sources.py --check      # overlay pins match the files

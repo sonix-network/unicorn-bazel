@@ -1,0 +1,46 @@
+name: Probe Unicorn config headers (manual)
+
+# Regenerates bazel/config/<host>/ the way it was made: Unicorn's own configure
+# and create_config, run as its CMakeLists.txt runs them, on each POSIX host.
+# Compare the uploaded headers with the overlay's (minus CONFIG_IASL).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [ubuntu-24.04, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.host }}
+    steps:
+      - name: Fetch and verify Unicorn 2.1.4
+        run: |
+          curl -sSfL -o unicorn.tar.gz https://github.com/unicorn-engine/unicorn/archive/refs/tags/2.1.4.tar.gz
+          echo "ea8863f095a0136388694e5a6063afd9bb7650e30243dd6251af59c5ce5601f4  unicorn.tar.gz" | shasum -a 256 -c
+          tar xzf unicorn.tar.gz
+      - name: Run Unicorn's configure and create_config as CMakeLists.txt does
+        run: |
+          set -eux
+          U=$PWD/unicorn-2.1.4
+          cc --version
+          case "$(uname -m)" in x86_64) EXTRA="-m64 -mcx16";; *) EXTRA="";; esac
+          mkdir out && cd out
+          sh "$U/qemu/configure" --cc=cc \
+            "--extra-cflags=$EXTRA -DUNICORN_HAS_X86 -DUNICORN_HAS_ARM -DUNICORN_HAS_ARM64 -fPIC" \
+            --target-list="x86_64-softmmu, arm-softmmu, aarch64-softmmu, " > configure.log
+          sh "$U/qemu/scripts/create_config" < config-host.mak > config-host.h
+          for t in x86_64 arm aarch64; do
+            sh "$U/qemu/scripts/create_config" < $t-softmmu/config-target.mak > $t-softmmu/config-target.h
+          done
+          cat config-host.h
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: config-${{ matrix.host }}
+          path: |
+            out/config-host.h
+            out/*-softmmu/config-target.h
+            out/configure.log

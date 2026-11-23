@@ -1,6 +1,6 @@
 module(name = "unicorn_overlay_dev")
 
-bazel_dep(name = "unicorn", version = "2.1.4.bcr.1")
+bazel_dep(name = "unicorn", version = "2.1.4.bcr.2")
 
 bazel_dep(name = "hermetic_cc_toolchain", version = "4.3.0", dev_dependency = True)
 
