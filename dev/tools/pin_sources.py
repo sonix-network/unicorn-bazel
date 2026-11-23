@@ -24,11 +24,11 @@ def integrity(data):
 def expected(version_dir):
     source = json.loads((version_dir / "source.json").read_text())
     overlay = version_dir / "overlay"
-    source["overlay"] = {
-        path.relative_to(overlay).as_posix(): integrity(path.read_bytes())
-        for path in sorted(overlay.rglob("*"))
-        if path.is_file()
-    }
+    # Sort by the POSIX path string: Path objects compare case-insensitively
+    # on Windows, which would reorder the keys there.
+    files = sorted((path.relative_to(overlay).as_posix(), path)
+                   for path in overlay.rglob("*") if path.is_file())
+    source["overlay"] = {name: integrity(path.read_bytes()) for name, path in files}
     return json.dumps(source, indent=4) + "\n"
 
 
