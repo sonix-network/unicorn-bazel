@@ -209,9 +209,12 @@ def unicorn_softmmu(name, softmmu, target_dir, srcs, common):
         name = name,
         srcs = ARCH_COMMON_SRCS + srcs + internal_headers(),
         textual_hdrs = textual_includes(),
+        # cl.exe resolves /FI like #include "...", not against the working
+        # directory, so it gets the bare name, found through -I qemu, as
+        # CMakeLists.txt passes it.
         copts = _copts(softmmu) + ["-DNEED_CPU_H"] + _per_os(
             ["-include", header],
-            ["/FI" + header],
+            ["/FI%s.h" % softmmu],
         ) + _includes(["qemu/target/" + target_dir]),
         deps = [common],
         # Static only, as upstream links one libunicorn: no per-library .so.
